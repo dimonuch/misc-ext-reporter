@@ -7,7 +7,13 @@ config["history_file"] = "./calls.csv"
 config["file_separator"] = ";"
 
 config["exts_total"] = 1000
-config["history_total"] = 6*31*10000
+# "serial" - последовательно, в любом другом случае - рандомом
+config["exts_alg"] = "serial"
+# при serial - диапазон генерируемых номеров (от и до включительно)
+config["exts_serial_fromto"] = [100, 934]
+
+config["history_total"] = 2*31*1000
+
 
 
 def main(config):
@@ -18,10 +24,18 @@ def main(config):
 
     with open(config["exts_file"], 'w') as file:
         file.write("ext\n")  # шапка
-        i = 0
-        while (i < config["exts_total"]):
-            file.write("{0}\n".format(random.randrange(100, 999)))
-            i = i + 1
+        
+        if config["exts_alg"] == "serial":
+            i = config["exts_serial_fromto"][0]
+            while (i <= config["exts_serial_fromto"][1]):
+                file.write("{0}\n".format(i))
+                i = i + 1
+        else:
+  
+            i = 0
+            while (i < config["exts_total"]):
+                file.write("{0}\n".format(random.randrange(100, 999)))
+                i = i + 1
 
     # Файл с журналом звонков
     # Возможные отсутствующие номера (по первому файлу) нас не волнуют
