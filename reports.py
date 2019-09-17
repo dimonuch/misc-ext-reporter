@@ -24,7 +24,8 @@ def main(config):
         all_exts = pd.read_csv(
             config["exts_file"], sep=config["file_separator"], dtype={'ext': str})
         history = pd.read_csv(
-            config["history_file"], sep=config["file_separator"], parse_dates=["calldate"],
+            config["history_file"], sep=config["file_separator"], parse_dates=[
+                "calldate"],
             usecols=['calldate', 'src', 'dst'], dtype={'src': str, 'dst': str})
     except Exception as e:
         print(e)
@@ -42,12 +43,14 @@ def main(config):
     counter["ext"] = exts.count().ext
 
     counter["history_all"] = history.count().src
-    counter["history_ext_all"] = history["src"].append(history["dst"]).nunique()
+    counter["history_ext_all"] = history["src"].append(
+        history["dst"]).nunique()
     counter["history_mindate"] = history.calldate.min()
     counter["history_maxdate"] = history.calldate.max()
 
     # Усекаем журнал, оставляем только записи с номерами из "списка номеров"
-    history = history[history['src'].isin(exts["ext"]) | history['dst'].isin(exts["ext"])]
+    history = history[history['src'].isin(
+        exts["ext"]) | history['dst'].isin(exts["ext"])]
 
     counter["history"] = history.count().src
     counter["history_ext"] = history["src"].append(history["dst"]).nunique()
@@ -78,7 +81,7 @@ def main(config):
     print("Наиболее старые последние звонки ТОП({0}):".format(
         config["top_oldest"]))
 
-    oldest_calls = history.groupby("src").agg({"calldate": ["max"]}).sort_values(
+    oldest_calls = history[history['src'].isin(exts["ext"])].groupby("src").agg({"calldate": ["max"]}).sort_values(
         [("calldate", "max")], ascending=True).head(config["top_oldest"])
 
     print(oldest_calls)
