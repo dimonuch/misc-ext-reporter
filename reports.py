@@ -1,20 +1,20 @@
 import pandas as pd
 
-## Секция с настройками. Тут даже что-то менять можно. Удалять строки нельзя, иначе будет больно
+# Секция с настройками. Тут даже что-то менять можно. Удалять строки нельзя, иначе будет больно
 config = dict()
 # файл со списком номеров
 config["exts_file"] = "./exts.csv"
 # файл с журналом звонков
 config["history_file"] = "./calls.csv"
 # разделитель в CSV файлах
-config["file_separator"] = ";"
+config["file_separator"] = ","
 # Сколько показывать отсутствующих в журнале номеров
-config["top_missed"] = 20
+config["top_missed"] = 200
 # Сколько показывать самых старых звонков
 config["top_oldest"] = 30
 
 
-## А вот дальше лучше не смотреть. Там говнокод, который "как-то работает"
+# А вот дальше лучше не смотреть. Там говнокод, который "как-то работает"
 
 def main(config):
 
@@ -24,13 +24,13 @@ def main(config):
         all_exts = pd.read_csv(
             config["exts_file"], sep=config["file_separator"])
         history = pd.read_csv(
-            config["history_file"], sep=config["file_separator"], parse_dates=["datetime"])
+            config["history_file"], sep=config["file_separator"], parse_dates=["calldate"], usecols=['calldate', 'src', 'dst'])
     except Exception as e:
         print(e)
         return
 
     # маленькая проверка - загрузились ли данные именно как "дата"?
-    if (pd.core.dtypes.common.is_datetime_or_timedelta_dtype(history.datetime) != True):
+    if (pd.core.dtypes.common.is_datetime_or_timedelta_dtype(history.calldate) != True):
         print("Ошибка: в колонке 'дата' журнала какой-то мусор.")
         return
 
@@ -40,16 +40,17 @@ def main(config):
     exts = all_exts.drop_duplicates(subset="ext")
     counter["ext"] = exts.count().ext
 
-    counter["history_all"] = history.count().ext
-    counter["history_ext_all"] = len(history["ext"].unique().tolist())
-    counter["history_mindate"] = history.datetime.min()
-    counter["history_maxdate"] = history.datetime.max()
+    counter["history_all"] = history.count().src
+    counter["history_ext_all"] = len(history["src"].unique().tolist())
+    counter["history_mindate"] = history.calldate.min()
+    counter["history_maxdate"] = history.calldate.max()
 
     # Усекаем журнал, оставляем только записи с номерами из "списка номеров"
-    history = history[history['ext'].isin(exts["ext"])]
+    history = history[history['src'].isin(
+        exts["ext"]) | history['dst'].isin(exts["ext"])]
 
-    counter["history"] = history.count().ext
-    counter["history_ext"] = len(history["ext"].unique().tolist())
+    counter["history"] = history.count().src
+    counter["history_ext"] = len(history["src"].unique().tolist())
 
     print("\n== Статистика")
     print(
@@ -66,11 +67,12 @@ def main(config):
     print("Номера отсутствуют в журнале (не звонили) ТОП({0}):".format(
         config["top_missed"]))
 
-    missed_exts = exts[~exts['ext'].isin(history["ext"])]
+    missed_exts = exts[~exts['ext'].isin(
+        history["src"]) & ~exts['ext'].isin(history["dst"])]
 
     print(", ".join(map(str, missed_exts["ext"].head(
         config["top_missed"]).tolist())))
-
+    return
     print("")
 
     print("Наиболее старые последние звонки ТОП({0}):".format(

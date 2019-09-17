@@ -4,7 +4,7 @@ import datetime
 config = dict()
 config["exts_file"] = "./exts.csv"
 config["history_file"] = "./calls.csv"
-config["file_separator"] = ";"
+config["file_separator"] = ","
 
 config["exts_total"] = 1000
 # "serial" - последовательно, в любом другом случае - рандомом
