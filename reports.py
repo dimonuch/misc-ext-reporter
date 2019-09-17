@@ -9,7 +9,7 @@ config["history_file"] = "./calls.csv"
 # разделитель в CSV файлах
 config["file_separator"] = ","
 # Сколько показывать отсутствующих в журнале номеров
-config["top_missed"] = 200
+config["top_missed"] = 1000
 # Сколько показывать самых старых звонков
 config["top_oldest"] = 30
 
@@ -22,9 +22,10 @@ def main(config):
 
     try:
         all_exts = pd.read_csv(
-            config["exts_file"], sep=config["file_separator"])
+            config["exts_file"], sep=config["file_separator"], dtype={'ext': str})
         history = pd.read_csv(
-            config["history_file"], sep=config["file_separator"], parse_dates=["calldate"], usecols=['calldate', 'src', 'dst'])
+            config["history_file"], sep=config["file_separator"], parse_dates=["calldate"],
+            usecols=['calldate', 'src', 'dst'], dtype={'src': str, 'dst': str})
     except Exception as e:
         print(e)
         return
@@ -41,16 +42,15 @@ def main(config):
     counter["ext"] = exts.count().ext
 
     counter["history_all"] = history.count().src
-    counter["history_ext_all"] = len(history["src"].unique().tolist())
+    counter["history_ext_all"] = history["src"].append(history["dst"]).nunique()
     counter["history_mindate"] = history.calldate.min()
     counter["history_maxdate"] = history.calldate.max()
 
     # Усекаем журнал, оставляем только записи с номерами из "списка номеров"
-    history = history[history['src'].isin(
-        exts["ext"]) | history['dst'].isin(exts["ext"])]
+    history = history[history['src'].isin(exts["ext"]) | history['dst'].isin(exts["ext"])]
 
     counter["history"] = history.count().src
-    counter["history_ext"] = len(history["src"].unique().tolist())
+    counter["history_ext"] = history["src"].append(history["dst"]).nunique()
 
     print("\n== Статистика")
     print(
