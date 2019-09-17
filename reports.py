@@ -72,14 +72,14 @@ def main(config):
 
     print(", ".join(map(str, missed_exts["ext"].head(
         config["top_missed"]).tolist())))
-    return
+
     print("")
 
     print("Наиболее старые последние звонки ТОП({0}):".format(
         config["top_oldest"]))
 
-    oldest_calls = history.groupby("ext").agg({"datetime": ["max"]}).sort_values(
-        [("datetime", "max")], ascending=True).head(config["top_oldest"])
+    oldest_calls = history.groupby("src").agg({"calldate": ["max"]}).sort_values(
+        [("calldate", "max")], ascending=True).head(config["top_oldest"])
 
     print(oldest_calls)
 
