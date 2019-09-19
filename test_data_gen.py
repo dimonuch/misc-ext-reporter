@@ -12,7 +12,7 @@ config["exts_alg"] = "serial"
 # при serial - диапазон генерируемых номеров (от и до включительно)
 config["exts_serial_fromto"] = [100, 934]
 
-config["history_total"] = 2*31*1000
+config["history_total"] = 1*31*100
 
 
 
@@ -45,14 +45,16 @@ def main(config):
     stop = datetime.datetime(year=2019, month=9, day=14)
 
     with open(config["history_file"], 'w') as file:
-        file.write("ext{0}datetime\n".format(
+        file.write("calldate{0}src{0}dst\n".format(
             config["file_separator"]))  # шапка
         i = 0
         while (i < config["history_total"]):
-            file.write("{0}{1}{2}\n".format(
-                random.randrange(100, 980),     # Верхнее значение 980 - не ошибка! так надо
-                config["file_separator"],
-                random_date(start, stop)))
+            file.write("{1}{0}{2}{0}{3}\n".format(
+                config["file_separator"]
+                ,random_date(start, stop)
+                ,random.randrange(100, 980)     # Верхнее значение 980 - не ошибка! так надо
+                ,random.randrange(100, 980)                
+                ))
        
             i = i + 1
 
